@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stock extends Model
 {
-    // use HasFactory;
+    use HasFactory;
 
     protected $table = 'stock';
 
@@ -14,7 +15,7 @@ class Stock extends Model
         'in_stock' => 'boolean'
     ];
 
-    public function track()
+    public function track($callback = null)
     {
         $status = $this->retailer
             ->client()
@@ -25,7 +26,7 @@ class Stock extends Model
             'price' => $status->price
         ]);
 
-        $this->recordProductHistory();
+        $callback && $callback($this);
     }
 
     public function retailer()
@@ -33,17 +34,8 @@ class Stock extends Model
         return $this->belongsTo(Retailer::class);
     }
 
-    public function productHistory()
+    public function product()
     {
-        return $this->hasMany(ProductHistory::class);
-    }
-
-    public function recordProductHistory(): void
-    {
-        $this->productHistory()->create([
-            'price' => $this->price,
-            'in_stock' => $this->in_stock,
-            'product_id' => $this->product_id,
-        ]);
+        return $this->belongsTo(Product::class);
     }
 }
