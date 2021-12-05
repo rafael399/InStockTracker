@@ -2,13 +2,10 @@
 
 namespace Tests\Unit;
 
-use App\Clients\StockStatus;
 use App\Models\Product;
-use App\Models\ProductHistory;
 use Database\Seeders\RetailerWithProductSeeder;
-use Facades\App\Clients\ClientFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ProductHistoryTest extends TestCase
@@ -18,10 +15,11 @@ class ProductHistoryTest extends TestCase
     /** @test */
     function it_records_history_each_time_stock_is_tracked()
     {
+        Notification::fake();
+
         $this->seed(RetailerWithProductSeeder::class);
 
-        ClientFactory::shouldReceive('make->checkAvailability')
-            ->andReturn(new StockStatus($available = true, $price = 99));
+        $this->mockClientRequest($available = true, $price = 99);
 
         $product = tap(Product::first(), function ($product) {
             $this->assertCount(0, $product->productHistory);

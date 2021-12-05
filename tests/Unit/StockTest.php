@@ -3,12 +3,11 @@
 namespace Tests\Unit;
 
 use App\Clients\ClientException;
-use App\Clients\StockStatus;
 use App\Models\Retailer;
 use App\Models\Stock;
 use Database\Seeders\RetailerWithProductSeeder;
-use Facades\App\Clients\ClientFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class StockTest extends TestCase
@@ -30,26 +29,11 @@ class StockTest extends TestCase
     /** @test */
     function it_updates_local_stock_status_after_being_tracked()
     {
+        Notification::fake();
+
         $this->seed(RetailerWithProductSeeder::class);
 
-        ClientFactory::shouldReceive('make->checkAvailability')
-            ->andReturn(
-                new StockStatus($available = true, $price = 9900)
-            );
-
-        // Can also be done as:
-        // $clientMock = Mockery::mock(Client::class);
-        // $clientMock->shouldReceive('checkAvailability')->andReturn(new StockStatus($available = true, $price = 9900));
-        // ClientFactory::shouldReceive('make')->andReturn($clientMock);
-
-        // Or:
-        // ClientFactory::shouldReceive('make')->andReturn(new class implements Client
-        // {
-        //     public function checkAvailability(Stock $stock): StockStatus
-        //     {
-        //         return new StockStatus($available = true, $price = 9900);
-        //     }
-        // });
+        $this->mockClientRequest($available = true, $price = 9900);
 
         $stock = tap(Stock::first())->track();
 
